@@ -23,10 +23,10 @@ export const getAllItems = async (search = ''): Promise<Item[]> => {
     const keys = Object.keys(localStorage)
     const itemsKey = keys.filter((k) => k.startsWith(ITEMS_KEY))
     const items: Item[] = itemsKey
-      .map(k => localStorage.getItem(k))
+      .map((k) => localStorage.getItem(k))
       .filter(isNotNull)
       .map((i) => JSON.parse(i))
-      .filter(i => containsSearch(i, search))
+      .filter((i) => containsSearch(i, search))
     setTimeout(() => {
       resolve(items)
     }, 500)
@@ -50,7 +50,7 @@ export const getItem = async (id: string): Promise<Item | null> => {
         updatedAt: '',
         word: '',
         wordLang: '',
-        wordPronunciation: ''
+        wordPronunciation: '',
       }
     }
     setTimeout(() => {
@@ -59,20 +59,38 @@ export const getItem = async (id: string): Promise<Item | null> => {
   })
 }
 
+export const addItem = (newItem: Item) => {
+  return new Promise((resolve) => {
+    const item: Item = {
+      ...newItem,
+      id: String(Date.now()),
+      updatedAt: formatDate(),
+      createdAt: formatDate(),
+    }
 
-export const addItem = async (newItem: Item) => {
-  const item: Item = { ...newItem, id: String(Date.now()), updatedAt: formatDate(), createdAt: formatDate() }
+    localStorage.setItem(buildItemKey(item.id), JSON.stringify(item))
 
-  localStorage.setItem(buildItemKey((item.id)), JSON.stringify(item))
-  return item.id
+    setTimeout(() => {
+      resolve(item.id)
+    }, 500)
+  })
 }
 
-export const editItem = async (item: Item) => {
-  item.updatedAt = formatDate()
-
-  localStorage.setItem(buildItemKey((item.id)), JSON.stringify(item))
+export const editItem = (item: Item) => {
+  return new Promise((resolve) => {
+    item.updatedAt = formatDate()
+    localStorage.setItem(buildItemKey(item.id), JSON.stringify(item))
+    setTimeout(() => {
+      resolve(item.id)
+    }, 500)
+  })
 }
 
-export const deleteItem = async (item: Item) => {
-  localStorage.removeItem(buildItemKey(item.id))
+export const deleteItem = (id: string) => {
+  return new Promise((resolve) => {
+    localStorage.removeItem(buildItemKey(id))
+    setTimeout(() => {
+      resolve(id)
+    }, 500)
+  })
 }

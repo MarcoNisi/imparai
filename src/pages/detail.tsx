@@ -1,16 +1,32 @@
 import { useNavigate, useParams } from 'solid-app-router'
 import { BsSave } from 'solid-icons/bs'
-import { createEffect, createMemo, createResource, Match, Show, Switch, For } from 'solid-js'
+import { IoClose } from 'solid-icons/io'
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  Match,
+  Show,
+  Switch,
+  For,
+  createSignal,
+} from 'solid-js'
 import Loader from '../components/loader'
 import Title from '../components/title'
 import { addItem, editItem, getItem } from '../lib/storage'
 import { Item } from '../lib/types'
 import langs from '../../langs.json'
+import { ImSpinner9 } from 'solid-icons/im'
+import { formatDate } from '../lib/utils'
 
 const Detail = () => {
   const params = useParams()
   const navigate = useNavigate()
   const [item, { mutate }] = createResource(() => params.id, getItem)
+  const [success, setSuccess] = createSignal(false)
+  const [error, setError] = createSignal(false)
+  const [loading, setLoading] = createSignal(false)
+
   createEffect(() => {
     if (!item.loading && !item() && params.id !== 'new') {
       navigate('/notFound')
@@ -18,14 +34,25 @@ const Detail = () => {
   })
 
   const onSave = async () => {
-    const itemValue = item()
-    if (itemValue) {
-      if (itemValue.id === 'new') {
-        const id = await addItem(itemValue)
-        navigate(`/details/${id}`)
-      } else {
-        editItem(itemValue)
+    try {
+      setLoading(true)
+      setSuccess(false)
+      setError(false)
+      const itemValue = item()
+      if (itemValue) {
+        if (itemValue.id === 'new') {
+          const id = await addItem(itemValue)
+          navigate(`/details/${id}`)
+        } else {
+          await editItem(itemValue)
+        }
       }
+      setSuccess(true)
+      setError(true)
+    } catch (_) {
+      setError(true)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -33,12 +60,15 @@ const Detail = () => {
     const itemValue = item()
     if (!itemValue) return false
     const mandatoryFields: (keyof Item)[] = ['meaning', 'meaningLang', 'word', 'wordLang']
-    const keys = Object.keys(itemValue).map(key => key as keyof Item)
-    const validKeys = keys.map(key => Boolean(itemValue[key] || !mandatoryFields.includes(key)))
+    const keys = Object.keys(itemValue).map((key) => key as keyof Item)
+    const validKeys = keys.map((key) => Boolean(itemValue[key] || !mandatoryFields.includes(key)))
     return validKeys.every(Boolean)
   })
 
-  createEffect(() => console.log(item()))
+  const resultText = createMemo(() => {
+    if (success()) return { text: 'Saved', color: 'text-success-text' }
+    if (error()) return { text: 'An error has occurred!', color: 'text-danger-text' }
+  })
 
   return (
     <main>
@@ -51,16 +81,18 @@ const Detail = () => {
           {(item) => (
             <>
               <div class="flex flex-col">
-                <div class="flex flex-1 justify-between mb-4">
+                <div class="flex flex-1 justify-between mb-4 flex-col md:flex-row gap-1">
                   <span>Choose word language</span>
                   <select
                     value={item.wordLang}
-                    class="bg-surface px-2 capitalize"
+                    class="bg-surface p-1 capitalize"
                     onChange={(e) => mutate({ ...item, wordLang: e.currentTarget.value })}
                   >
                     <For each={Object.keys(langs)}>
                       {(lang) => (
-                        <option class='capitalize' value={lang}>{langs[lang as keyof typeof langs]}</option>
+                        <option class="capitalize" value={lang}>
+                          {langs[lang as keyof typeof langs]}
+                        </option>
                       )}
                     </For>
                   </select>
@@ -73,18 +105,20 @@ const Detail = () => {
                     onChange={(e) => mutate({ ...item, word: e.currentTarget.value })}
                   />
                 </div>
-                <div class="flex flex-1 justify-between mb-4">
+                <div class="flex flex-1 justify-between mb-4 flex-col md:flex-row gap-1">
                   <span>Choose meaning language</span>
                   <select
                     value={item.meaningLang}
-                    class="bg-surface px-2 capitalize"
+                    class="bg-surface p-1 capitalize"
                     onChange={(e) => mutate({ ...item, meaningLang: e.currentTarget.value })}
                   >
-                  <For each={Object.keys(langs)}>
-                    {(lang) => (
-                      <option class='capitalize' value={lang}>{langs[lang as keyof typeof langs]}</option>
-                    )}
-                  </For>
+                    <For each={Object.keys(langs)}>
+                      {(lang) => (
+                        <option class="capitalize" value={lang}>
+                          {langs[lang as keyof typeof langs]}
+                        </option>
+                      )}
+                    </For>
                   </select>
                 </div>
                 <div class="flex flex-1 flex-col mb-4">
@@ -112,21 +146,22 @@ const Detail = () => {
                   />
                 </div>
                 <Show when={item.createdAt}>
-                  <div class="flex flex-1 justify-between mb-4">
-                    <span>Created at {item.createdAt}</span>
+                  <div class="flex flex-1 justify-between mb-4 text-sm">
+                    <span>Created at {formatDate(item.createdAt, { format: 'it', fullYear: false })}</span>
                     <Show when={item.updatedAt}>
-                      <span>Updated at {item.updatedAt}</span>
+                      <span>Updated at {formatDate(item.updatedAt, { format: 'it', fullYear: false })}</span>
                     </Show>
                   </div>
                 </Show>
                 <button
                   class="bg-surface py-2 flex justify-center items-center gap-2 uppercase hover:bg-surface-hover disabled:cursor-not-allowed"
                   onClick={onSave}
-                  disabled={!canSave()}
+                  disabled={!canSave() || loading()}
                 >
                   Save
-                  <BsSave size={16} class="text-default-text" />
+                  {loading() ? <ImSpinner9 size={16} class="animate-spin text-default-text" /> : <BsSave size={16} class="text-default-text" />}
                 </button>
+                <span class={`mt-2 ${resultText()?.color}`}>{resultText()?.text}</span>
               </div>
             </>
           )}
