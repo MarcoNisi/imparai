@@ -13,7 +13,7 @@ import {
 } from 'solid-js'
 import Loader from '../components/loader'
 import Title from '../components/title'
-import { addItem, editItem, getItem } from '../lib/storage'
+import { addItem, editItem, getItem, getPreference, upsertPreference } from '../lib/storage'
 import { Item } from '../lib/types'
 import langs from '../../langs.json'
 import { ImSpinner9 } from 'solid-icons/im'
@@ -46,6 +46,8 @@ const Detail = () => {
         } else {
           await editItem(itemValue)
         }
+        upsertPreference('meaningLang', itemValue.meaningLang)
+        upsertPreference('wordLang', itemValue.wordLang)
       }
       setSuccess(true)
       setError(true)
@@ -70,6 +72,21 @@ const Detail = () => {
     if (error()) return { text: 'An error has occurred!', color: 'text-danger-text' }
   })
 
+  const [storedWordLang] = createResource('wordLang', getPreference)
+  const [storedMeaningLang] = createResource('meaningLang', getPreference)
+  
+  const defaultWordLang = createMemo(() => {
+    const itemWordLang = item()?.wordLang
+    const firstWordLang = Object.keys(langs).at(0)
+    return itemWordLang || storedWordLang() || firstWordLang
+  })
+
+  const defaultMeaningLang = createMemo(() => {
+    const itemMeaningLang = item()?.meaningLang
+    const firstMeaningLang = Object.keys(langs).at(0)
+    return itemMeaningLang || storedMeaningLang() || firstMeaningLang
+  })
+
   return (
     <main>
       <Title />
@@ -90,7 +107,7 @@ const Detail = () => {
                   >
                     <For each={Object.keys(langs)}>
                       {(lang) => (
-                        <option class="capitalize" value={lang}>
+                        <option class="capitalize" value={lang} selected={defaultWordLang() === lang}>
                           {langs[lang as keyof typeof langs]}
                         </option>
                       )}
@@ -114,7 +131,7 @@ const Detail = () => {
                   >
                     <For each={Object.keys(langs)}>
                       {(lang) => (
-                        <option class="capitalize" value={lang}>
+                        <option class="capitalize" value={lang} selected={defaultMeaningLang() === lang}>
                           {langs[lang as keyof typeof langs]}
                         </option>
                       )}

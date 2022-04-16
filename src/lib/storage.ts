@@ -1,8 +1,9 @@
-import { Item } from './types'
+import { Item, Preference } from './types'
 import { formatDate } from './utils'
 
 const STORAGE_PREFIX = 'imparai'
 const ITEMS_KEY = `${STORAGE_PREFIX}_items`
+const PREFERENCES_KEY = `${STORAGE_PREFIX}_preferences`
 
 const isNotNull = (item: string | null): item is string => item !== null
 const containsSearch = (item: Item, search: string) => {
@@ -15,6 +16,7 @@ const containsSearch = (item: Item, search: string) => {
 }
 
 const buildItemKey = (id: string) => `${ITEMS_KEY}_${id}`
+const buildPreferenceKey = (id: string) => `${PREFERENCES_KEY}_${id}`
 
 // All functions are made async because in future I want to move from localStorage to some other async storage system
 
@@ -60,7 +62,7 @@ export const getItem = async (id: string): Promise<Item | null> => {
 }
 
 export const addItem = (newItem: Item) => {
-  return new Promise((resolve) => {
+  return new Promise<string>((resolve) => {
     const item: Item = {
       ...newItem,
       id: String(Date.now()),
@@ -77,7 +79,7 @@ export const addItem = (newItem: Item) => {
 }
 
 export const editItem = (item: Item) => {
-  return new Promise((resolve) => {
+  return new Promise<string>((resolve) => {
     item.updatedAt = formatDate()
     localStorage.setItem(buildItemKey(item.id), JSON.stringify(item))
     setTimeout(() => {
@@ -87,10 +89,28 @@ export const editItem = (item: Item) => {
 }
 
 export const deleteItem = (id: string) => {
-  return new Promise((resolve) => {
+  return new Promise<string>((resolve) => {
     localStorage.removeItem(buildItemKey(id))
     setTimeout(() => {
       resolve(id)
+    }, 500)
+  })
+}
+
+export const getPreference = (preferenceId: Preference) => {
+  return new Promise<string | null>((resolve) => {
+    const storedPreference = localStorage.getItem(buildPreferenceKey(preferenceId))
+    setTimeout(() => {
+      resolve(storedPreference)
+    }, 500)
+  })
+}
+
+export const upsertPreference = (preferenceId: Preference, value: string) => {
+  return new Promise<boolean>((resolve) => {
+    localStorage.setItem(buildPreferenceKey(preferenceId), value)
+    setTimeout(() => {
+      resolve(true)
     }, 500)
   })
 }

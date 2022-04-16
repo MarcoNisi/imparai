@@ -1,6 +1,5 @@
 import { useNavigate } from 'solid-app-router'
-import { AiOutlineRight } from 'solid-icons/ai'
-import { FiTrash } from 'solid-icons/fi'
+import { CgTrashEmpty } from 'solid-icons/cg'
 import { ImSpinner9 } from 'solid-icons/im'
 import { Item as ItemType } from '../lib/types'
 
@@ -27,8 +26,7 @@ const Item = ({ item: { id, word, wordLang, meaning, meaningLang }, onDelete, de
         <span class='mr-2 hidden md:block'>
           <strong class='capitalize'>{wordLang}</strong>: <span class='capitalize'>{meaningLang}</span>
         </span>
-        <AiOutlineRight size={20}/>
-        {deleting ? <ImSpinner9 class="animate-spin" /> : <FiTrash onClick={e => onDelete(e, id)} size={20} class='text-danger-text cursor-pointer hover:bg-danger-text hover:text-surface'/>}
+        {deleting ? <ImSpinner9 class="animate-spin" /> : <CgTrashEmpty onClick={e => onDelete(e, id)} size={24} class='text-danger-text rounded-lg cursor-pointer hover:bg-danger-text hover:text-surface'/>}
       </div>
     </div>
   )

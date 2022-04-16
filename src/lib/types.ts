@@ -10,3 +10,5 @@ export interface Item {
   pinned: boolean
   note: string
 }
+
+export type Preference = 'wordLang' | 'meaningLang'
