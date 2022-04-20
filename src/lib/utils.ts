@@ -1,4 +1,5 @@
 import { onCleanup } from 'solid-js'
+import { GetPagesElement } from './types'
 
 export const debounce = <Args extends any[]>(fn: (...args: Args) => void, wait = 500) => {
   let timeoutId: ReturnType<typeof setTimeout>
@@ -23,4 +24,27 @@ export const formatDate = (date: string | Date = new Date(), conf: { format: 'it
   } else {
     return `${year}-${month}-${day}`
   }
+}
+
+export const getPages = (current: number, max: number): GetPagesElement[] => {
+  const pages: GetPagesElement[] = []
+  const start = 1
+  const next = current + 1
+  const prev = current - 1
+
+  if (current !== start) {
+    pages.push(start)
+    if (prev - start > 1) pages.push('divider')
+  }
+  if (prev > start) pages.push(prev)
+
+  pages.push(current)
+
+  if (next < max) pages.push(next)
+  if (current !== max) {
+    if (max - next > 1) pages.push('divider')
+    pages.push(max)
+  }
+
+  return pages
 }

@@ -12,3 +12,15 @@ export interface Item {
 }
 
 export type Preference = 'wordLang' | 'meaningLang'
+  
+export type GetPagesElement = 'divider' | number
+
+export interface Filters {
+  page: number
+  search: string
+}
+export interface Results<T> {
+  items: T[]
+  total: number
+  pages: number
+}

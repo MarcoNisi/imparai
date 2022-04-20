@@ -7,12 +7,14 @@ import Search from '../components/search'
 import Title from '../components/title'
 import { deleteItem, getAllItems } from '../lib/storage'
 import { Link } from 'solid-app-router'
+import Pagination from '../components/pagination'
+import { Filters } from '../lib/types'
 
 const Home = () => {
-  const [search, setSearch] = createSignal('')
+  const [filters, setFilters] = createSignal<Filters>({ page: 1, search: '' })
   const [deleting, setDeleting] = createSignal<null | string>(null)
-  const [items, { refetch }] = createResource(search, getAllItems)
-  const isLoading = createMemo(() => items.loading)
+  const [result, { refetch }] = createResource(filters, getAllItems)
+  const isLoading = createMemo(() => result.loading)
   const onDelete = async (e: MouseEvent, id: string) => {
     e.stopPropagation()
     const result = confirm('Are you sure to delete this item? This action cannot be undone.')
@@ -31,25 +33,36 @@ const Home = () => {
   }
 
   return (
-    <main>
+    <main class="flex flex-col">
       <Title />
-      <Search onSearch={setSearch} />
+      <Search onSearch={search => setFilters(prev => ({ ...prev, search }))} />
       <Show when={isLoading()}>
-        <Loader size='large'/>
+        <Loader size="large" />
       </Show>
       <Show when={!isLoading()}>
-        <For each={items()} fallback={<Nothing text='No items' />}>
-          {(item) => (
-            <div class='mt-2'>
-              <Item item={item} onDelete={onDelete} deleting={deleting() === item.id} />
-            </div>
-          )}
-        </For>
+        <div class="flex-1 overflow-y-scroll overflow-auto scrollbar">
+          <For each={result()?.items} fallback={<Nothing text="No items" />}>
+            {(item) => (
+              <div class="mb-2">
+                <Item item={item} onDelete={onDelete} deleting={deleting() === item.id} />
+              </div>
+            )}
+          </For>
+        </div>
       </Show>
-      <div class='flex justify-center mt-4'>
-        <Link class="bg-surface p-2 flex justify-center items-center gap-1 hover:bg-surface-hover" href="/details/new">
+      <Show when={result()?.items.length}>
+        <Pagination current={filters().page} max={result()?.pages || 1} onChange={(page) => {
+          setFilters(p => ({ ...p, page }))
+          refetch()
+        }} />
+      </Show>
+      <div class="flex justify-center mt-4">
+        <Link
+          class="bg-surface p-2 flex justify-center items-center gap-1 hover:bg-surface-hover"
+          href="/details/new"
+        >
           Add
-          <RiSystemAddLine class='text-lg' />
+          <RiSystemAddLine class="text-lg" />
         </Link>
       </div>
     </main>

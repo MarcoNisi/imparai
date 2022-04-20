@@ -1,4 +1,5 @@
-import { Item, Preference } from './types'
+import { PAGE_SIZE } from './constants'
+import { Filters, Item, Preference, Results } from './types'
 import { formatDate } from './utils'
 
 const STORAGE_PREFIX = 'imparai'
@@ -20,17 +21,20 @@ const buildPreferenceKey = (id: string) => `${PREFERENCES_KEY}_${id}`
 
 // All functions are made async because in future I want to move from localStorage to some other async storage system
 
-export const getAllItems = async (search = ''): Promise<Item[]> => {
+export const getAllItems = async ({ search, page }: Filters = { search: '', page: 1 }): Promise<Results<Item>> => {
   return new Promise((resolve) => {
     const keys = Object.keys(localStorage)
     const itemsKey = keys.filter((k) => k.startsWith(ITEMS_KEY))
-    const items: Item[] = itemsKey
+    const storedItems = itemsKey
       .map((k) => localStorage.getItem(k))
-      .filter(isNotNull)
-      .map((i) => JSON.parse(i))
-      .filter((i) => containsSearch(i, search))
+    const notNullItems = storedItems.filter(isNotNull)
+    const items = notNullItems.map((i) => JSON.parse(i))
+    const matchingItems = items.filter((i) => containsSearch(i, search))
+    const from = (page - 1) * PAGE_SIZE
+    const to = from + PAGE_SIZE
+    const paginatedItems = matchingItems.slice(from, to)
     setTimeout(() => {
-      resolve(items)
+      resolve({ items: paginatedItems, total: matchingItems.length, pages: Math.ceil(matchingItems.length / PAGE_SIZE) })
     }, 500)
   })
 }

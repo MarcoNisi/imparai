@@ -11,7 +11,8 @@ module.exports = {
       'disabled-text': '#686868',
       'surface-hover': '#202020',
       'success-text': '#15803d',
-      'danger-text': '#7f1d1d'
+      'danger-text': '#7f1d1d',
+      transparent: 'rgba(0, 0, 0, 0)'
     }
   },
   plugins: [],
