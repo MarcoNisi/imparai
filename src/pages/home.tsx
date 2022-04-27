@@ -5,7 +5,7 @@ import Loader from '../components/loader'
 import Nothing from '../components/nothing'
 import Search from '../components/search'
 import Title from '../components/title'
-import { deleteItem, getAllItems } from '../lib/storage'
+import { deleteItem, getFilteredItems } from '../lib/storage'
 import { Link } from 'solid-app-router'
 import Pagination from '../components/pagination'
 import { Filters } from '../lib/types'
@@ -13,7 +13,7 @@ import { Filters } from '../lib/types'
 const Home = () => {
   const [filters, setFilters] = createSignal<Filters>({ page: 1, search: '' })
   const [deleting, setDeleting] = createSignal<null | string>(null)
-  const [result, { refetch }] = createResource(filters, getAllItems)
+  const [result, { refetch }] = createResource(filters, getFilteredItems)
   const isLoading = createMemo(() => result.loading)
   const onDelete = async (e: MouseEvent, id: string) => {
     e.stopPropagation()

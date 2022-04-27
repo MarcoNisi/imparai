@@ -21,7 +21,7 @@ const buildPreferenceKey = (id: string) => `${PREFERENCES_KEY}_${id}`
 
 // All functions are made async because in future I want to move from localStorage to some other async storage system
 
-export const getAllItems = async ({ search, page }: Filters = { search: '', page: 1 }): Promise<Results<Item>> => {
+export const getAllItems = async (): Promise<Item[]> => {
   return new Promise((resolve) => {
     const keys = Object.keys(localStorage)
     const itemsKey = keys.filter((k) => k.startsWith(ITEMS_KEY))
@@ -29,6 +29,15 @@ export const getAllItems = async ({ search, page }: Filters = { search: '', page
       .map((k) => localStorage.getItem(k))
     const notNullItems = storedItems.filter(isNotNull)
     const items = notNullItems.map((i) => JSON.parse(i))
+    setTimeout(() => {
+      resolve(items)
+    }, 500)
+  })
+}
+
+export const getFilteredItems = async ({ search, page }: Filters = { search: '', page: 1 }): Promise<Results<Item>> => {
+  return new Promise(async (resolve) => {
+    const items = await getAllItems()
     const matchingItems = items.filter((i) => containsSearch(i, search))
     const from = (page - 1) * PAGE_SIZE
     const to = from + PAGE_SIZE

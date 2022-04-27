@@ -1,5 +1,5 @@
 import { onCleanup } from 'solid-js'
-import { GetPagesElement } from './types'
+import { GetPagesElement, Item } from './types'
 
 export const debounce = <Args extends any[]>(fn: (...args: Args) => void, wait = 500) => {
   let timeoutId: ReturnType<typeof setTimeout>
@@ -47,4 +47,22 @@ export const getPages = (current: number, max: number): GetPagesElement[] => {
   }
 
   return pages
+}
+
+export const itemsToCSV = (items: Item[]): string => {
+  const keys = Object.keys(items[0]).join(';')
+  const content = `data:text/csv;charset=utf-8,${keys}\r\n${items
+    .map((item) => Object.values(item).join(';'))
+    .join('\r\n')}`
+  return content
+}
+
+export const downloadCSV = (content: string) => {
+  const encodedUri = encodeURI(content)
+  const link = document.createElement('a')
+  link.setAttribute('href', encodedUri)
+  link.setAttribute('download', `export_${formatDate()}.csv`)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
 }
